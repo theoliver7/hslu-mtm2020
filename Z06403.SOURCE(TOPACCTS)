@@ -1,0 +1,88 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.    ADDONE.
+       AUTHOR.        OLIVER.
+      *
+       ENVIRONMENT DIVISION.
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CUST-RECS ASSIGN TO CUSTRECS
+           ORGANIZATION IS SEQUENTIAL
+           ACCESS MODE IS SEQUENTIAL
+           FILE STATUS IS WS-FILE-STATUS.
+           SELECT CUST-TOP ASSIGN TO TOPACCTS.
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       FD  CUST-TOP RECORD CONTAINS 80 CHARACTERS RECORDING MODE F.
+       01  CUST-TOP-DONE.
+           05  TOP-FIRSTNAME PIC X(11)  VALUE SPACES.
+           05  TOP-LASTNAME  PIC X(22)  VALUE SPACES.
+           05  TOP-BALANCE   PIC X(12)  VALUE SPACES.
+           05  FILLER         PIC X(30) VALUE SPACES.
+
+       FD  CUST-RECS RECORD CONTAINS 80 CHARACTERS RECORDING MODE F.
+       01  CUST-RECS-ACC.
+           05  CUST-FIRSTNAME PIC X(11)  VALUE SPACES.
+           05  CUST-LASTNAME  PIC X(22)  VALUE SPACES.
+           05  FILLER         PIC X(3) VALUE SPACES.
+           05  CUST-BIRTHDAY  PIC X(8) VALUE SPACES.
+           05  CUST-ACCTDAY   PIC X(8) VALUE SPACES.
+           05  FILLER         PIC X(9) VALUE SPACES.
+           05  CUST-BALANCE   PIC X(12) VALUE SPACES.
+
+       WORKING-STORAGE SECTION.
+
+       01  WS-EOF         PIC A(1)  VALUE "N".
+       01  WS-FILE-STATUS PIC X(2).
+       01  TOTAL USAGE IS COMP-1.
+
+       01  HEADER-1.
+           05 FILLER      PIC X(37) VALUE
+                             "REPORT OF TOP ACCOUNT BALANCE HOLDERS".
+       01  HEADER-2.
+           05 FILLER PIC X(25) VALUE
+                             "PREPARED FOR PAT STANDARD".
+       01  HEADER-3.
+           05 FILLER PIC X(80) VALUE
+                            "=========================================".
+       01  FOOTER-1.
+           05 FILLER PIC X(13) VALUE
+                            "# OF RECORDS:".
+           05 COUNTER        PIC 9(2)  VALUE 0.
+
+
+
+      ****************************************************************
+      *                  PROCEDURE DIVISION                          *
+      ****************************************************************
+       PROCEDURE DIVISION.
+      *
+       MAIN-PARA.
+           OPEN INPUT CUST-RECS.
+           OPEN OUTPUT CUST-TOP.
+           WRITE CUST-TOP-DONE FROM HEADER-1
+           WRITE CUST-TOP-DONE FROM HEADER-2
+           WRITE CUST-TOP-DONE FROM HEADER-3
+           PERFORM READ-PARA UNTIL WS-EOF = "Y".
+           WRITE CUST-TOP-DONE FROM FOOTER-1
+           CLOSE CUST-RECS.
+           STOP RUN.
+
+       READ-PARA.
+           MOVE ZERO TO CUST-FIRSTNAME.
+           READ CUST-RECS
+           AT END
+              MOVE "Y" TO WS-EOF
+           NOT AT END
+              COMPUTE TOTAL = FUNCTION NUMVAL-C(CUST-BALANCE)
+              IF TOTAL > 8500000
+              THEN
+                 COMPUTE COUNTER = COUNTER + 1
+                 MOVE CUST-FIRSTNAME TO TOP-FIRSTNAME
+                 MOVE CUST-LASTNAME TO TOP-LASTNAME
+                 MOVE CUST-BALANCE TO TOP-BALANCE
+                 WRITE CUST-TOP-DONE
+              END-IF
+           END-READ.

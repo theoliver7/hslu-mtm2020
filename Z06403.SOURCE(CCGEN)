@@ -1,0 +1,128 @@
+/**************************** REXX *********************************/
+/* This exec illustrates the use of "EXECIO 0 ..." to open, empty, */
+/* or close a file. It reads records from file indd, allocated     */
+/* to 'sams.input.dataset', and writes selected records to file    */
+/* outdd, allocated to 'sams.output.dataset'. In this example, the */
+/* data set 'smas.input.dataset' contains variable-length records  */
+/* (RECFM = VB).                                                   */
+/*******************************************************************/
+"FREE FI(outdd)"
+"ALLOC FI(outdd) DA('Z06403.OUTPUT(CUST16)') SHR REUSE"
+
+out_ctr = 0                    /* Initialize # of lines written    */
+
+
+/*******************************************************************/
+/* Now read all lines from indd, starting at line 1, and copy      */
+/* selected lines to outdd.                                        */
+/*******************************************************************/
+
+DO loop = 1 TO 500 by 1         /* LOOP 500 times   */
+    genluhn = GENLUHN()
+    luhnresult = 1
+    IF luhnresult == 1 THEN    /* Check if cc_digits is luhn   */
+        DO
+           line.1 = genluhn
+          "EXECIO 1 DISKW outdd (STEM line." /* Write it to outdd   */
+          out_ctr = out_ctr + 1
+        END
+    ELSE
+        DO
+          SAY "invalid" genluhn
+        END
+END
+
+
+IF out_ctr > 0 THEN             /* Were any lines written to outdd?*/
+  DO                               /* Yes.  So outdd is now open   */
+     /****************************************************************/
+   /* Since the outdd file is already open at this point, the      */
+   /* following "EXECIO 0 DISKW ..." command will close the file,  */
+   /* but will not empty it of the lines that have already been    */
+   /* written. The data set allocated to outdd will contain out_ctr*/
+   /* lines.                                                       */
+   /****************************************************************/
+
+  "EXECIO 0 DISKW outdd (FINIS" /* Closes the open file, outdd     */
+  SAY 'File outdd now contains ' out_ctr' lines.'
+  END
+ELSE                         /* Else no new lines have been        */
+                             /* written to file outdd              */
+  DO                         /* Erase any old records from the file*/
+
+   /****************************************************************/
+   /* Since the outdd file is still closed at this point, the      */
+   /* following "EXECIO 0 DISKW " command will open the file,   */
+   /* write 0 records, and then close it.  This will effectively   */
+   /* empty the data set allocated to outdd.  Any old records that */
+   /* were in this data set when this exec started will now be     */
+   /* deleted.                                                     */
+   /****************************************************************/
+
+   "EXECIO 0 DISKW outdd (OPEN FINIS"  /*Empty the outdd file      */
+   SAY 'File outdd is now empty.'
+   END
+"FREE FI(outdd)"
+EXIT
+
+INSPECT:
+  say 'inspecting' cc_digits
+RETURN
+
+
+LUHN:
+  sum = 0
+  nDigits = length(genluhn)
+  reversed = reverse(genluhn)
+  do count = 1 to nDigits
+    digit = SUBSTR(reversed,count,1)
+    IF count // 2 == 0 THEN
+      DO
+      digit = digit * 2
+    END
+    IF digit > 9 THEN
+      DO
+      digit = digit -9
+    END
+    sum = sum + digit
+  end
+RETURN (sum // 10) == 0
+
+GENLUHN:
+    sequence1 = RANDOM(10000,99999)
+    sequence2 = RANDOM(10000,99999)
+    sequence3 = RANDOM(10000,99999)
+    sequence = sequence1 || sequence2 || sequence3
+    say sequence
+    nDigits = length(sequence)
+    reversed = reverse(sequence)
+    sum = 0
+    do count = 1 to nDigits
+        digit = SUBSTR(reversed,count,1)
+        IF count // 2 == 1 THEN
+            DO
+            digit = digit * 2
+        END
+        IF digit > 9 THEN
+            DO
+            digit = digit -9
+        END
+        sum = sum + digit
+    end
+    sum = sum * 9
+    checkdigit = sum // 10
+    sequence = sequence || checkdigit
+    say sequence
+RETURN sequence
+
+/* def luhn(card_number):                  */
+/*   def digits_of(n):                     */
+/*       return [int(d) for d in str(n)]   */
+/*   digits = digits_of(card_number)       */
+/*   odd_digits = digits[-1::-2]           */
+/*   even_digits = digits[-2::-2]          */
+/*   checksum = 0                          */
+/*   checksum += sum(odd_digits)           */
+/*   for d in even_digits:                 */
+/*       checksum += sum(digits_of(d*2))   */
+/*   return (checksum % 10)                */

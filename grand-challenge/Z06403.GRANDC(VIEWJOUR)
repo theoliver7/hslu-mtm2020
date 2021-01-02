@@ -1,0 +1,46 @@
+/* rexx */
+"execio * diskr journey     (stem journey.  finis"
+  if rc > 0 then call failed
+
+departureTime=substr(journey.3,17,8)         /* extract departureTime   */
+
+
+call bpxwunix 'env TZ="GMT-1" date',,out.     /* call uss command to     */
+currentTime=substr(out.1,12,8)                /* return the time for CET */
+
+currentTimeSec = datetosec(currentTime)
+departureTimeSec = datetosec(departureTime)
+
+if currentTimeSec>departureTimeSec then
+  do
+  say "oh no! you missed your connection for today"
+  end
+else
+  do
+  difference = sectodate(departureTimeSec-currentTimeSec)
+  say "Your connection will leave in " || difference
+  end
+
+do i=1 to journey.0
+  say journey.i
+end
+say "Don't forget to wear a mask ;)"
+exit
+
+
+datetosec:
+  PARSE ARG date
+  hour = substr(date,1,2)*3600
+  min = substr(date,4,2)*60
+  sec = substr(date,7,2)
+return hour+min+sec
+
+sectodate:
+  PARSE ARG sec
+  total = sec
+  seconds = total // 60
+  total   = total - seconds
+  hours   = total % 3600
+  total   = total - (hours * 3600)
+  mins    = total % 60
+return hours||":"||mins||":"||seconds
