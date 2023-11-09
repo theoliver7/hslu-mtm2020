@@ -10,4 +10,5 @@ involve the mainframe and be demonstratable using the system that we’ve made a
 challenges."
 
 In the Grand Challenge of the competition I integrated swiss public transport information into the coding workflow.
-![FlyerFinal](https://github.com/theoliver7/hslu-mtm2020/assets/10463395/45bd33ee-828d-4c5e-8730-0288c701180a)
+
+![FlyerFinal](https://github.com/theoliver7/hslu-mtm2020/assets/10463395/f1343cb0-1e15-48d9-9ade-81b5fd0966ee)
